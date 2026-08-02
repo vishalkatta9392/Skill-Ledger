@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Skill Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182742;
+    --cover:#0F3D2E;
+    --cover-deep:#092820;
+    --paper:#F7F2E4;
+    --paper-shade:#EFE7D2;
+    --rule:#D9CFB3;
+    --rule-strong:#B7AA84;
+    --brass:#B8923D;
+    --brass-light:#D9B863;
+    --rule-red:#A6382F;
+    --slate:#8B93A0;
+    --green-post:#1E6B47;
+    --font-display:'Fraunces', serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font-body);
+    color:var(--ink);
+    background:
+      radial-gradient(ellipse at top, #164231 0%, var(--cover-deep) 55%, #061810 100%);
+    min-height:100vh;
+    padding:32px 16px 64px;
+  }
+  .ledger-app{
+    max-width:1040px;
+    margin:0 auto;
+  }
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    text-align:center;
+    padding:36px 20px 26px;
+    color:var(--paper);
+  }
+  .masthead .eyebrow{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:var(--brass-light);
+    margin:0 0 10px;
+  }
+  .masthead h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(32px,5vw,52px);
+    margin:0 0 10px;
+    letter-spacing:.01em;
+  }
+  .masthead p{
+    font-family:var(--font-display);
+    font-style:italic;
+    font-weight:500;
+    font-size:16px;
+    color:#CFE0D5;
+    max-width:520px;
+    margin:0 auto;
+    line-height:1.5;
+  }
+
+  /* ---------- Balance ticker ---------- */
+  .balance-line{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    letter-spacing:.03em;
+    color:var(--brass-light);
+    background:linear-gradient(180deg,#0C3527,#092A1F);
+    border-top:1px solid rgba(184,146,61,.35);
+    border-bottom:1px solid rgba(184,146,61,.35);
+    padding:11px 18px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 22px;
+    justify-content:center;
+    border-radius:6px;
+    margin:0 0 30px;
+  }
+  .balance-line b{color:var(--paper);font-weight:600;}
+  .balance-line .divider{color:rgba(217,184,99,.4);}
+
+  /* ---------- Ledger spread (book) ---------- */
+  .book-shell{
+    background:var(--paper);
+    border-radius:4px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.08);
+    overflow:hidden;
+  }
+  .spread{
+    display:grid;
+    grid-template-columns:1fr 26px 1fr;
+  }
+  .page{padding:28px 26px 8px;}
+  .spine{
+    position:relative;
+    background:linear-gradient(180deg,#e3dabd,#d8cca8 45%,#e3dabd);
+    box-shadow:inset 0 0 14px rgba(0,0,0,.18);
+  }
+  .spine .ring{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    width:9px;height:9px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--brass-light), var(--brass) 60%, #8a6c26);
+    box-shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+
+  .page-header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    padding-bottom:8px;
+    margin-bottom:6px;
+    border-bottom:2px solid var(--ink);
+  }
+  .page.assets .page-header{color:var(--green-post);border-bottom-color:var(--green-post);}
+  .page.liabilities .page-header{color:var(--rule-red);border-bottom-color:var(--rule-red);}
+
+  .subsection{margin-bottom:22px;}
+  .subsection h3{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:19px;
+    margin:14px 0 4px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .subsection h3 .tag{
+    font-family:var(--font-mono);
+    font-size:10px;
+    font-weight:400;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--slate);
+    border:1px solid var(--rule-strong);
+    border-radius:20px;
+    padding:2px 8px;
+  }
+
+  ul.entries{list-style:none;margin:6px 0 0;padding:0;}
+  .entry{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 2px;
+    border-bottom:1px solid var(--rule);
+  }
+  .entry:hover{background:rgba(184,146,61,.08);}
+  .entry-no{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--slate);
+    width:34px;
+    flex:none;
+  }
+  .entry-text{
+    flex:1;
+    border:none;
+    background:transparent;
+    font-family:var(--font-body);
+    font-size:14.5px;
+    color:var(--ink);
+    padding:4px 2px;
+  }
+  .entry-text::placeholder{color:#A79E86;font-style:italic;}
+  .entry-del, .entry-add{
+    flex:none;
+    width:22px;height:22px;
+    border-radius:50%;
+    border:1px solid var(--rule-strong);
+    background:var(--paper);
+    color:var(--slate);
+    font-family:var(--font-mono);
+    font-size:13px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;
+    transition:opacity .15s, color .15s, border-color .15s;
+  }
+  .entry:hover .entry-del{opacity:1;}
+  .entry-del:hover{color:var(--rule-red);border-color:var(--rule-red);}
+  .entry.add-entry .entry-add{opacity:1;color:var(--green-post);border-color:var(--green-post);}
+  .entry.add-entry .entry-add:hover{background:var(--green-post);color:var(--paper);}
+  .entry.add-entry{border-bottom:1px dashed var(--rule-strong);}
+
+  /* ---------- Register (skills table) ---------- */
+  .register{
+    background:var(--paper-shade);
+    padding:30px 26px 34px;
+    border-top:2px solid var(--ink);
+  }
+  .register > h2{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:23px;
+    margin:0 0 4px;
+  }
+  .register > .sub{
+    font-family:var(--font-body);
+    font-size:13px;
+    color:#5a6270;
+    margin:0 0 20px;
+  }
+  .category-block{margin-bottom:22px;}
+  .category-block h3{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--brass);
+    margin:0 0 6px;
+    padding-bottom:4px;
+    border-bottom:1px solid var(--rule-strong);
+  }
+  table.skills{width:100%;border-collapse:collapse;}
+  table.skills td{
+    padding:8px 6px;
+    border-bottom:1px solid var(--rule);
+    vertical-align:middle;
+  }
+  table.skills tr:hover{background:rgba(184,146,61,.09);}
+  .reg-no{font-family:var(--font-mono);font-size:11px;color:var(--slate);width:38px;}
+  .skill-name, .skill-notes{
+    width:100%;
+    border:none;background:transparent;
+    font-family:var(--font-body);
+    font-size:14px;
+    color:var(--ink);
+    padding:4px 2px;
+  }
+  .skill-name{font-weight:500;}
+  .skill-notes::placeholder{color:#A79E86;font-style:italic;}
+  .skill-status{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    border:1px solid var(--rule-strong);
+    border-radius:4px;
+    background:var(--paper);
+    color:var(--ink);
+    padding:5px 4px;
+  }
+  .progress-cell{width:110px;}
+  .progress-track{
+    width:100px;height:8px;
+    background:var(--rule);
+    border-radius:5px;
+    overflow:hidden;
+    border:1px solid var(--rule-strong);
+  }
+  .progress-fill{height:100%;border-radius:5px;transition:width .25s ease;}
+  .fill-not{background:var(--slate);}
+  .fill-learning{background:var(--brass);}
+  .fill-comfortable{background:#3E5A8A;}
+  .fill-proficient{background:var(--green-post);}
+  .row-del{
+    width:24px;height:24px;border-radius:50%;
+    border:1px solid var(--rule-strong);background:var(--paper);
+    color:var(--slate);cursor:pointer;font-family:var(--font-mono);
+    opacity:0;transition:opacity .15s,color .15s,border-color .15s;
+  }
+  tr:hover .row-del{opacity:1;}
+  .row-del:hover{color:var(--rule-red);border-color:var(--rule-red);}
+
+  .add-skill{
+    display:flex;flex-wrap:wrap;gap:8px;
+    margin-top:16px;padding-top:14px;
+    border-top:1px dashed var(--rule-strong);
+  }
+  .add-skill select, .add-skill input{
+    font-family:var(--font-body);
+    font-size:13.5px;
+    padding:8px 10px;
+    border:1px solid var(--rule-strong);
+    border-radius:5px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .add-skill input[name="skillName"]{flex:1;min-width:160px;}
+  .add-skill input[name="skillNotes"]{flex:1;min-width:160px;}
+  .add-skill button{
+    font-family:var(--font-mono);
+    font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    padding:8px 16px;
+    border:1px solid var(--green-post);
+    background:var(--green-post);
+    color:var(--paper);
+    border-radius:5px;
+    cursor:pointer;
+  }
+  .add-skill button:hover{background:#175939;}
+
+  /* ---------- Course ledger ---------- */
+  .courses-block{
+    background:var(--paper-shade);
+    padding:30px 26px 34px;
+    border-top:2px solid var(--ink);
+  }
+  .courses-block > h2{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:23px;
+    margin:0 0 4px;
+  }
+  .courses-block > .sub{
+    font-family:var(--font-body);
+    font-size:13px;
+    color:#5a6270;
+    margin:0 0 18px;
+  }
+  table.courses{width:100%;border-collapse:collapse;}
+  table.courses td{
+    padding:10px 6px;
+    border-bottom:1px solid var(--rule);
+    vertical-align:middle;
+  }
+  table.courses tr:hover{background:rgba(184,146,61,.09);}
+  table.courses tr.next-up{background:rgba(30,107,71,.08);}
+  .priority-input{
+    width:36px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    border:1px solid var(--rule-strong);
+    border-radius:4px;
+    background:var(--paper);
+    color:var(--ink);
+    padding:5px 4px;
+    text-align:center;
+  }
+  .course-name-cell{display:flex;flex-direction:column;gap:2px;}
+  .course-name-link{
+    font-family:var(--font-body);
+    font-weight:500;
+    font-size:14px;
+    color:var(--ink);
+    text-decoration:none;
+    border-bottom:1px dotted var(--rule-strong);
+  }
+  .course-name-link:hover{color:var(--green-post);border-bottom-color:var(--green-post);}
+  .provider-tag{
+    font-family:var(--font-mono);
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--slate);
+  }
+  .next-flag{
+    display:inline-block;
+    font-family:var(--font-mono);
+    font-size:9.5px;
+    letter-spacing:.1em;
+    color:var(--green-post);
+    border:1px solid var(--green-post);
+    border-radius:20px;
+    padding:2px 7px;
+    margin-right:6px;
+    vertical-align:middle;
+  }
+  .progress-cell-course{display:flex;align-items:center;gap:6px;}
+  .progress-num{
+    width:46px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    border:1px solid var(--rule-strong);
+    border-radius:4px;
+    background:var(--paper);
+    color:var(--ink);
+    padding:5px 4px;
+    text-align:center;
+  }
+  .courses-block .balance-line{
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);
+  }
+  .add-course{
+    display:flex;flex-wrap:wrap;gap:8px;
+    margin-top:16px;padding-top:14px;
+    border-top:1px dashed var(--rule-strong);
+  }
+  .add-course select, .add-course input{
+    font-family:var(--font-body);
+    font-size:13.5px;
+    padding:8px 10px;
+    border:1px solid var(--rule-strong);
+    border-radius:5px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .add-course input[name="coursePriority"]{width:56px;}
+  .add-course input[name="courseName"]{flex:2;min-width:150px;}
+  .add-course input[name="courseProvider"]{flex:1;min-width:110px;}
+  .add-course input[name="courseUrl"]{flex:2;min-width:150px;}
+  .add-course button{
+    font-family:var(--font-mono);
+    font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    padding:8px 16px;
+    border:1px solid var(--green-post);
+    background:var(--green-post);
+    color:var(--paper);
+    border-radius:5px;
+    cursor:pointer;
+  }
+  .add-course button:hover{background:#175939;}
+
+  /* ---------- Footer ---------- */
+  .footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+    padding:16px 4px 0;
+    color:var(--paper);
+  }
+  .footer .status-msg{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    color:#CFE0D5;
+    opacity:.85;
+  }
+  #reset-btn{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    letter-spacing:.05em;
+    background:transparent;
+    border:1px solid rgba(207,224,213,.4);
+    color:#CFE0D5;
+    padding:8px 14px;
+    border-radius:5px;
+    cursor:pointer;
+  }
+  #reset-btn:hover{border-color:var(--rule-red);color:#f0b3ad;}
+  #reset-btn.confirming{border-color:var(--rule-red);color:#f0b3ad;background:rgba(166,56,47,.15);}
+
+  :focus-visible{outline:2px solid var(--brass-light);outline-offset:2px;}
+
+  .loading{
+    text-align:center;
+    color:var(--paper);
+    font-family:var(--font-mono);
+    font-size:13px;
+    padding:60px 20px;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    .entry, table.skills tr{
+      animation:ink-in .35s ease both;
+    }
+    @keyframes ink-in{
+      from{opacity:0;transform:translateY(3px);}
+      to{opacity:1;transform:translateY(0);}
+    }
+  }
+
+  @media (max-width:760px){
+    .spread{grid-template-columns:1fr;}
+    .spine{display:none;}
+    .page.liabilities{border-top:2px solid var(--ink);}
+    .progress-cell{width:70px;}
+    .progress-track{width:60px;}
+    table.skills td{padding:8px 4px;}
+    table.courses td{padding:8px 4px;}
+    .progress-num{width:40px;}
+  }
+</style>
+</head>
+<body>
+<div class="ledger-app">
+
+  <div class="masthead">
+    <p class="eyebrow">Personal Journal &middot; Quant Transition</p>
+    <h1>The Skill Ledger</h1>
+    <p>A running account of what you bring to the desk, and what still needs posting.</p>
+  </div>
+
+  <div id="root">
+    <div class="loading">Opening the ledger…</div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'skill-ledger-v1';
+  const root = document.getElementById('root');
+
+  // ===== Fill in your own JSONBin.io values here — see the walkthrough for how to get them =====
+  const JSONBIN_BIN_ID = '6a6f12f5f5f4af5e29e099de';
+  const JSONBIN_MASTER_KEY = '$2a$10$NUEwSN22Llmf.CPGLWhvzO1os1UecxS96gpUd384f5rs9jRDxAgZy';
+  // ===============================================================================================
+
+  // Shared cloud storage: this exact bin is read/written no matter where the page is
+  // loaded from (the direct GitHub Pages link, the Notion embed, any device), so every
+  // copy shows the same live data. Unlike localStorage, fetch() isn't affected by
+  // browser storage-partitioning rules for third-party iframes.
+  const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_BIN_ID;
+  const storage = {
+    async get(key){
+      const res = await fetch(JSONBIN_URL + '/latest', {
+        headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+      });
+      if(!res.ok) throw new Error('not found');
+      const json = await res.json();
+      const record = json.record || {};
+      if(!(key in record)) throw new Error('not found');
+      return { key, value: record[key] };
+    },
+    async set(key, value){
+      let record = {};
+      try{
+        const res = await fetch(JSONBIN_URL + '/latest', { headers: { 'X-Master-Key': JSONBIN_MASTER_KEY } });
+        if(res.ok){ const json = await res.json(); record = json.record || {}; }
+      }catch(e){}
+      record[key] = value;
+      const putRes = await fetch(JSONBIN_URL, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
+        body: JSON.stringify(record)
+      });
+      if(!putRes.ok) throw new Error('save failed');
+      return { key, value };
+    }
+  };
+
+  const STATUS_OPTIONS = ['Not Started','Learning','Comfortable','Proficient'];
+  const STATUS_FILL = {
+    'Not Started':{cls:'fill-not', pct:4},
+    'Learning':{cls:'fill-learning', pct:34},
+    'Comfortable':{cls:'fill-comfortable', pct:67},
+    'Proficient':{cls:'fill-proficient', pct:100}
+  };
+  const CATEGORIES = ['Programming & Tools','Mathematics','Finance Domain','Career & Portfolio'];
+  const CATEGORY_PREFIX = {'Programming & Tools':'P','Mathematics':'M','Finance Domain':'F','Career & Portfolio':'C'};
+  const COURSE_STATUS_OPTIONS = ['Not Started','In Progress','Completed'];
+  const COURSE_STATUS_FILL = {'Not Started':'fill-not','In Progress':'fill-learning','Completed':'fill-proficient'};
+
+  function defaultData(){
+    return {
+      updated: new Date().toISOString(),
+      swot: {
+        strengths: [
+          'Strong math & stats foundation from BSc coursework',
+          'Intermediate SQL — comfortable with joins, aggregation, window functions',
+          'Self-directed: already building real projects (quant handbook, this tracker)',
+          'Comfortable in Excel and Power BI for structured analysis'
+        ],
+        opportunities: [
+          'Structured 10-month, 4-phase roadmap already mapped out',
+          'Strong curated resource list (Hilpisch, Zhou, 3Blue1Brown, StatQuest, StrataScratch)',
+          'Dedicated portfolio-building phase ahead in the roadmap',
+          'Final-year status allows focused study time before job search intensifies'
+        ],
+        weaknesses: [
+          'Stochastic calculus and advanced linear algebra still untouched',
+          'No professional experience in finance or trading',
+          'Time series modelling (ARIMA/GARCH) not yet started',
+          'Finance domain vocabulary still developing'
+        ],
+        threats: [
+          'Competitive applicant pool of math/CS/stats graduates targeting the same roles',
+          'Tight timeline balancing final-year coursework with self-study',
+          'Hiring conditions in quant finance can shift with market cycles',
+          'Foundational math gaps carry risk if compressed too close to the deadline'
+        ]
+      },
+      nextId: 17,
+      skills: [
+        {id:1, category:'Programming & Tools', name:'SQL', status:'Comfortable', notes:'Joins, aggregations, window functions'},
+        {id:2, category:'Programming & Tools', name:'Python', status:'Learning', notes:'pandas / numpy fundamentals underway'},
+        {id:3, category:'Programming & Tools', name:'Excel', status:'Comfortable', notes:''},
+        {id:4, category:'Programming & Tools', name:'Power BI', status:'Learning', notes:''},
+        {id:5, category:'Mathematics', name:'Probability & Statistics', status:'Proficient', notes:'Core academic strength'},
+        {id:6, category:'Mathematics', name:'Linear Algebra', status:'Learning', notes:'3Blue1Brown series'},
+        {id:7, category:'Mathematics', name:'Stochastic Calculus', status:'Not Started', notes:'Phase 2 target'},
+        {id:8, category:'Mathematics', name:'Time Series Analysis', status:'Not Started', notes:'ARIMA / GARCH'},
+        {id:9, category:'Finance Domain', name:'Financial Instruments & Markets', status:'Learning', notes:'Handbook Vol. I'},
+        {id:10, category:'Finance Domain', name:'Market Microstructure', status:'Not Started', notes:''},
+        {id:11, category:'Finance Domain', name:'Derivatives Pricing (Black-Scholes)', status:'Not Started', notes:'Phase 2 target'},
+        {id:12, category:'Finance Domain', name:'Portfolio Theory', status:'Not Started', notes:''},
+        {id:13, category:'Career & Portfolio', name:'Resume / Portfolio Materials', status:'Comfortable', notes:'Template built'},
+        {id:14, category:'Career & Portfolio', name:'Technical Interview Prep', status:'Not Started', notes:'Zhou book queued'},
+        {id:15, category:'Career & Portfolio', name:'Networking', status:'Not Started', notes:''},
+        {id:16, category:'Career & Portfolio', name:'Project Portfolio (build in public)', status:'Learning', notes:'Handbook + this tracker'}
+      ],
+      nextCourseId: 4,
+      courses: [
+        {id:1, name:'Data Analysis with Python Certification', provider:'freeCodeCamp', url:'https://www.freecodecamp.org/learn/data-analysis-with-python/', priority:1, status:'Not Started', progress:0, notes:'Primary track — run start to finish for the certificate'},
+        {id:2, name:'Kaggle Learn (Python, Pandas, Data Viz)', provider:'Kaggle', url:'https://www.kaggle.com/learn', priority:2, status:'Not Started', progress:0, notes:'Run in parallel — quick daily reps'},
+        {id:3, name:'QuantConnect Boot Camp', provider:'QuantConnect', url:'https://www.quantconnect.com/learning/', priority:3, status:'Not Started', progress:0, notes:'Start once core Python is solid (Phase 2)'}
+      ]
+    };
+  }
+
+  let state = null;
+
+  function migrate(d){
+    const dflt = defaultData();
+    if(!Array.isArray(d.courses)){ d.courses = dflt.courses; }
+    if(typeof d.nextCourseId !== 'number'){ d.nextCourseId = 4; }
+    return d;
+  }
+
+  async function loadData(){
+    try{
+      const res = await storage.get(STORAGE_KEY);
+      if(res && res.value){ return migrate(JSON.parse(res.value)); }
+      throw new Error('empty');
+    }catch(e){
+      const d = defaultData();
+      try{ await storage.set(STORAGE_KEY, JSON.stringify(d)); }catch(_e){}
+      return d;
+    }
+  }
+
+  let saveTimer = null;
+  async function saveData(){
+    state.updated = new Date().toISOString();
+    try{
+      await storage.set(STORAGE_KEY, JSON.stringify(state));
+      flashStatus('Posted.');
+    }catch(e){
+      flashStatus('Could not save — check connection.');
+    }
+  }
+  function flashStatus(msg){
+    const el = document.getElementById('status-msg');
+    if(!el) return;
+    el.textContent = msg;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>{ el.textContent = ''; }, 2200);
+  }
+
+  function fmtDate(iso){
+    try{
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}).toUpperCase();
+    }catch(e){ return ''; }
+  }
+
+  function pad(n){ return String(n+1).padStart(2,'0'); }
+
+  function getNextCourse(){
+    const active = state.courses.filter(c=>c.status!=='Completed')
+      .sort((a,b)=>(Number(a.priority)||99)-(Number(b.priority)||99));
+    return active[0] || null;
+  }
+
+  function render(){
+    const s = state.swot;
+    const proficientCount = state.skills.filter(k=>k.status==='Proficient').length;
+    const total = state.skills.length;
+    const assetsCount = s.strengths.length + s.opportunities.length;
+    const liabilitiesCount = s.weaknesses.length + s.threats.length;
+    const avgCourseProgress = state.courses.length
+      ? Math.round(state.courses.reduce((sum,c)=>sum+(Number(c.progress)||0),0) / state.courses.length)
+      : 0;
+    const nextCourse = getNextCourse();
+
+    root.innerHTML = `
+      <div class="balance-line">
+        <span><b>ASSETS</b> ${assetsCount} entries</span>
+        <span class="divider">|</span>
+        <span><b>LIABILITIES</b> ${liabilitiesCount} entries</span>
+        <span class="divider">|</span>
+        <span><b>IN THE BLACK</b> ${proficientCount}/${total} skills proficient</span>
+        <span class="divider">|</span>
+        <span>LAST POSTED <b>${fmtDate(state.updated)}</b></span>
+      </div>
+
+      <div class="book-shell">
+        <div class="spread">
+          <div class="page assets">
+            <div class="page-header"><span>Assets</span><span>Positive</span></div>
+            ${swotSection('strengths','Strengths','Internal', s.strengths)}
+            ${swotSection('opportunities','Opportunities','External', s.opportunities)}
+          </div>
+          <div class="spine">
+            ${[0,1,2,3,4,5].map(()=>`<div class="ring"></div>`).join('')}
+          </div>
+          <div class="page liabilities">
+            <div class="page-header"><span>Liabilities</span><span>Negative</span></div>
+            ${swotSection('weaknesses','Weaknesses','Internal', s.weaknesses)}
+            ${swotSection('threats','Threats','External', s.threats)}
+          </div>
+        </div>
+
+        <div class="register">
+          <h2>General Ledger — Skills Account</h2>
+          <p class="sub">Update status as you go. Progress bars post automatically.</p>
+          ${CATEGORIES.map(cat=>categoryBlock(cat)).join('')}
+
+          <form class="add-skill" id="add-skill-form">
+            <select name="skillCategory">
+              ${CATEGORIES.map(c=>`<option value="${escapeAttr(c)}">${escapeHtml(c)}</option>`).join('')}
+            </select>
+            <input type="text" name="skillName" placeholder="Skill name…" required>
+            <select name="skillStatus">
+              ${STATUS_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}
+            </select>
+            <input type="text" name="skillNotes" placeholder="Notes (optional)…">
+            <button type="submit">+ Add entry</button>
+          </form>
+        </div>
+
+        <div class="courses-block">
+          <h2>Course Ledger — External Study Tracker</h2>
+          <p class="sub">Self-reported — there's no account linked, so update the % as you clear lessons on each site.</p>
+          <div class="balance-line" style="margin:0 0 16px;">
+            <span><b>COURSES</b> ${state.courses.length}</span>
+            <span class="divider">|</span>
+            <span><b>AVG PROGRESS</b> ${avgCourseProgress}%</span>
+            <span class="divider">|</span>
+            <span>UP NEXT <b>${nextCourse ? escapeHtml(nextCourse.name) : 'All caught up'}</b></span>
+          </div>
+          <table class="courses">
+            <tbody>
+              ${state.courses.slice().sort((a,b)=>(Number(a.priority)||99)-(Number(b.priority)||99)).map(c=>courseRow(c, nextCourse)).join('')}
+            </tbody>
+          </table>
+          <form class="add-course" id="add-course-form">
+            <input type="number" name="coursePriority" placeholder="#" min="1" max="9" value="${state.courses.length+1}" aria-label="Priority">
+            <input type="text" name="courseName" placeholder="Course name…" required>
+            <input type="text" name="courseProvider" placeholder="Provider…">
+            <input type="url" name="courseUrl" placeholder="https://…">
+            <select name="courseStatus">
+              ${COURSE_STATUS_OPTIONS.map(o=>`<option value="${o}">${o}</option>`).join('')}
+            </select>
+            <button type="submit">+ Add course</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="footer">
+        <button id="reset-btn" type="button">Reset to defaults</button>
+        <span class="status-msg" id="status-msg"></span>
+      </div>
+    `;
+
+    document.querySelectorAll('.spine .ring').forEach((r,i)=>{
+      r.style.top = (10 + i*16) + '%';
+    });
+
+    attachEvents();
+  }
+
+  function swotSection(key, title, tag, items){
+    const prefix = title[0];
+    const rows = items.map((text,i)=>`
+      <li class="entry" data-quadrant="${key}" data-idx="${i}" style="animation-delay:${i*35}ms">
+        <span class="entry-no">${prefix}-${pad(i)}</span>
+        <input type="text" class="entry-text" value="${escapeAttr(text)}" aria-label="${escapeAttr(title)} entry">
+        <button class="entry-del" data-quadrant="${key}" data-idx="${i}" aria-label="Remove entry" type="button">&times;</button>
+      </li>
+    `).join('');
+    return `
+      <div class="subsection">
+        <h3>${escapeHtml(title)} <span class="tag">${tag}</span></h3>
+        <ul class="entries">
+          ${rows}
+          <li class="entry add-entry" data-quadrant="${key}">
+            <span class="entry-no">${prefix}-${pad(items.length)}</span>
+            <input type="text" class="entry-text new-entry-input" data-quadrant="${key}" placeholder="Add ${indefinite(title)}…">
+            <button class="entry-add" data-quadrant="${key}" aria-label="Add entry" type="button">+</button>
+          </li>
+        </ul>
+      </div>
+    `;
+  }
+
+  function indefinite(title){
+    const map = {Strengths:'a strength', Opportunities:'an opportunity', Weaknesses:'a weakness', Threats:'a threat'};
+    return map[title] || 'an entry';
+  }
+
+  function categoryBlock(cat){
+    const items = state.skills.filter(k=>k.category===cat);
+    const prefix = CATEGORY_PREFIX[cat];
+    const rows = items.map((sk,i)=>{
+      const fill = STATUS_FILL[sk.status] || STATUS_FILL['Not Started'];
+      return `
+        <tr data-id="${sk.id}">
+          <td class="reg-no mono">${prefix}-${pad(i)}</td>
+          <td><input type="text" class="skill-name" data-id="${sk.id}" value="${escapeAttr(sk.name)}" aria-label="Skill name"></td>
+          <td>
+            <select class="skill-status" data-id="${sk.id}">
+              ${STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===sk.status?'selected':''}>${o}</option>`).join('')}
+            </select>
+          </td>
+          <td class="progress-cell">
+            <div class="progress-track"><div class="progress-fill ${fill.cls}" style="width:${fill.pct}%"></div></div>
+          </td>
+          <td><input type="text" class="skill-notes" data-id="${sk.id}" value="${escapeAttr(sk.notes||'')}" placeholder="Notes…" aria-label="Notes"></td>
+          <td><button class="row-del" data-id="${sk.id}" aria-label="Remove skill" type="button">&times;</button></td>
+        </tr>
+      `;
+    }).join('');
+    if(items.length===0) return '';
+    return `
+      <div class="category-block">
+        <h3>${escapeHtml(cat)}</h3>
+        <table class="skills">
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function safeUrl(u){
+    if(typeof u === 'string' && /^https?:\/\//i.test(u.trim())) return escapeAttr(u.trim());
+    return '#';
+  }
+
+  function courseRow(c, nextCourse){
+    const isNext = !!(nextCourse && c.id === nextCourse.id);
+    const fillCls = COURSE_STATUS_FILL[c.status] || COURSE_STATUS_FILL['Not Started'];
+    const pct = Math.max(0, Math.min(100, Number(c.progress)||0));
+    return `
+      <tr data-id="${c.id}" class="${isNext ? 'next-up' : ''}">
+        <td><input type="number" class="priority-input course-priority" data-id="${c.id}" min="1" max="9" value="${Number(c.priority)||1}" aria-label="Priority"></td>
+        <td>
+          <div class="course-name-cell">
+            <a class="course-name-link" href="${safeUrl(c.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(c.name)}</a>
+            <span class="provider-tag">${escapeHtml(c.provider||'')}</span>
+          </div>
+        </td>
+        <td>
+          <select class="course-status" data-id="${c.id}">
+            ${COURSE_STATUS_OPTIONS.map(o=>`<option value="${o}" ${o===c.status?'selected':''}>${o}</option>`).join('')}
+          </select>
+        </td>
+        <td class="progress-cell">
+          <div class="progress-cell-course">
+            <div class="progress-track"><div class="progress-fill ${fillCls}" style="width:${pct}%"></div></div>
+            <input type="number" class="progress-num course-progress" data-id="${c.id}" min="0" max="100" step="5" value="${pct}" aria-label="Progress percent">
+          </div>
+        </td>
+        <td><input type="text" class="skill-notes course-notes" data-id="${c.id}" value="${escapeAttr(c.notes||'')}" placeholder="Notes…" aria-label="Notes"></td>
+        <td>${isNext ? '<span class="next-flag">NEXT</span>' : ''}<button class="row-del course-del" data-id="${c.id}" aria-label="Remove course" type="button">&times;</button></td>
+      </tr>
+    `;
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function escapeAttr(str){ return escapeHtml(str); }
+
+  function attachEvents(){
+    root.querySelectorAll('.entry-text:not(.new-entry-input)').forEach(inp=>{
+      inp.addEventListener('change', e=>{
+        const q = e.target.dataset.quadrant, idx = +e.target.dataset.idx;
+        state.swot[q][idx] = e.target.value;
+        saveData();
+      });
+    });
+    root.querySelectorAll('.entry-del').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        const q = e.currentTarget.dataset.quadrant, idx = +e.currentTarget.dataset.idx;
+        state.swot[q].splice(idx,1);
+        render(); saveData();
+      });
+    });
+    function addEntry(q){
+      const input = root.querySelector(`.new-entry-input[data-quadrant="${q}"]`);
+      const val = input.value.trim();
+      if(!val) return;
+      state.swot[q].push(val);
+      render(); saveData();
+    }
+    root.querySelectorAll('.entry-add').forEach(btn=>{
+      btn.addEventListener('click', e=> addEntry(e.currentTarget.dataset.quadrant));
+    });
+    root.querySelectorAll('.new-entry-input').forEach(inp=>{
+      inp.addEventListener('keydown', e=>{
+        if(e.key==='Enter'){ e.preventDefault(); addEntry(e.target.dataset.quadrant); }
+      });
+    });
+
+    root.querySelectorAll('.skill-name').forEach(inp=>{
+      inp.addEventListener('change', e=>{
+        const sk = state.skills.find(k=>k.id==e.target.dataset.id);
+        if(sk){ sk.name = e.target.value; saveData(); }
+      });
+    });
+    root.querySelectorAll('.skill-notes').forEach(inp=>{
+      inp.addEventListener('change', e=>{
+        const sk = state.skills.find(k=>k.id==e.target.dataset.id);
+        if(sk){ sk.notes = e.target.value; saveData(); }
+      });
+    });
+    root.querySelectorAll('.skill-status').forEach(sel=>{
+      sel.addEventListener('change', e=>{
+        const sk = state.skills.find(k=>k.id==e.target.dataset.id);
+        if(sk){ sk.status = e.target.value; render(); saveData(); }
+      });
+    });
+    root.querySelectorAll('.row-del').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        const id = e.currentTarget.dataset.id;
+        state.skills = state.skills.filter(k=>k.id!=id);
+        render(); saveData();
+      });
+    });
+
+    root.querySelectorAll('.course-priority').forEach(inp=>{
+      inp.addEventListener('change', e=>{
+        const c = state.courses.find(k=>k.id==e.target.dataset.id);
+        if(c){ c.priority = Number(e.target.value)||1; render(); saveData(); }
+      });
+    });
+    root.querySelectorAll('.course-status').forEach(sel=>{
+      sel.addEventListener('change', e=>{
+        const c = state.courses.find(k=>k.id==e.target.dataset.id);
+        if(c){
+          c.status = e.target.value;
+          if(c.status==='Completed'){ c.progress = 100; }
+          render(); saveData();
+        }
+      });
+    });
+    root.querySelectorAll('.course-progress').forEach(inp=>{
+      inp.addEventListener('change', e=>{
+        const c = state.courses.find(k=>k.id==e.target.dataset.id);
+        if(c){
+          let v = Number(e.target.value); if(isNaN(v)) v = 0;
+          v = Math.max(0, Math.min(100, v));
+          c.progress = v;
+          if(v>=100){ c.status = 'Completed'; }
+          else if(v>0 && c.status==='Not Started'){ c.status = 'In Progress'; }
+          render(); saveData();
+        }
+      });
+    });
+    root.querySelectorAll('.course-notes').forEach(inp=>{
+      inp.addEventListener('change', e=>{
+        const c = state.courses.find(k=>k.id==e.target.dataset.id);
+        if(c){ c.notes = e.target.value; saveData(); }
+      });
+    });
+    root.querySelectorAll('.course-del').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        const id = e.currentTarget.dataset.id;
+        state.courses = state.courses.filter(k=>k.id!=id);
+        render(); saveData();
+      });
+    });
+    const courseForm = document.getElementById('add-course-form');
+    if(courseForm){
+      courseForm.addEventListener('submit', e=>{
+        e.preventDefault();
+        const fd = new FormData(courseForm);
+        const name = (fd.get('courseName')||'').toString().trim();
+        if(!name) return;
+        state.courses.push({
+          id: state.nextCourseId++,
+          name: name,
+          provider: (fd.get('courseProvider')||'').toString().trim(),
+          url: (fd.get('courseUrl')||'').toString().trim(),
+          priority: Number(fd.get('coursePriority'))||(state.courses.length+1),
+          status: fd.get('courseStatus') || 'Not Started',
+          progress: 0,
+          notes: ''
+        });
+        render(); saveData();
+      });
+    }
+
+    const form = document.getElementById('add-skill-form');
+    if(form){
+      form.addEventListener('submit', e=>{
+        e.preventDefault();
+        const fd = new FormData(form);
+        const name = (fd.get('skillName')||'').toString().trim();
+        if(!name) return;
+        state.skills.push({
+          id: state.nextId++,
+          category: fd.get('skillCategory'),
+          name: name,
+          status: fd.get('skillStatus'),
+          notes: (fd.get('skillNotes')||'').toString().trim()
+        });
+        render(); saveData();
+      });
+    }
+
+    const resetBtn = document.getElementById('reset-btn');
+    if(resetBtn){
+      let confirming = false;
+      resetBtn.addEventListener('click', ()=>{
+        if(!confirming){
+          confirming = true;
+          resetBtn.textContent = 'Click again to confirm — clears all entries';
+          resetBtn.classList.add('confirming');
+          setTimeout(()=>{
+            confirming = false;
+            resetBtn.textContent = 'Reset to defaults';
+            resetBtn.classList.remove('confirming');
+          }, 3500);
+        }else{
+          state = defaultData();
+          render(); saveData();
+        }
+      });
+    }
+  }
+
+  loadData().then(d=>{
+    state = d;
+    render();
+  });
+})();
+</script>
+</body>
+</html>
